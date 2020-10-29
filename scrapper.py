@@ -12,13 +12,10 @@ pagination = indeed_soup.find("div", {"class": "pagination"})
 
 # class 속성이 pagination 인 div element를 추출
 
-pages = pagination.find_all("a")
+links = pagination.find_all("a")
 
-spans = []
+pages = []
 
-for page in pages:
-    spans.append(page.find("span"))
-
-spans = spans[:-1]
-
-print(spans)
+for link in links[:-1]:
+    pages.append(int(link.find("span").string))
+print(pages)
