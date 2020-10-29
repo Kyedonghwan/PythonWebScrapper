@@ -5,7 +5,7 @@ LIMIT = 50
 URL = f"https://www.indeed.com/jobs?q=python&limit={LIMIT}&vjk=84a541c104b5b24c"
 
 
-def extract_indeed_pages():
+def get_last_page():
     result = requests.get(URL)
 
     # indeed_result.text = 추출된 html
@@ -26,7 +26,41 @@ def extract_indeed_pages():
     return max_page
 
 
-def extract_indeed_jobs(last_page):
+def extract_job(html):
+    title = html.find("h2", {"class": "title"}).find("a")["title"]
+    company = html.find("span", {"class": "company"})
+    if company:
+        company_anchor = company.find("a")
+        if company_anchor is not None:
+            company = str(company_anchor.string)
+        else:
+            company = str(company.string)
+        company = company.strip()
+    else:
+        company = None
+
+    location = html.find("span", {"class": "location"}).string
+
+    job_id = html["data-jk"]
+    return {'title': title, 'company': company, 'location': location, "link": f"https://indeed.com/viewjob?jk={job_id}"}
+    # 속성title의 값을 가져옴
+
+
+def extract_jobs(last_page):
+
+    jobs = []
     for page in range(last_page):
+        print(f"Scrapping page: {page}")
         result = requests.get(f"{URL}&start={page*LIMIT}")
-        print(result.status_code)
+        soup = BeautifulSoup(result.text, "html.parser")
+        results = soup.find_all("div", {"class": "jobsearch-SerpJobCard"})
+        for result in results:
+            job = extract_job(result)
+            jobs.append(job)
+    return jobs
+
+
+def get_jobs():
+    last_page = get_last_page()
+    jobs = extract_jobs(last_page)
+    return jobs
